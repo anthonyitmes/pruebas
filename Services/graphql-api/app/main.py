@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.routers import graphql_router
+import logging
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -17,6 +18,11 @@ app.add_middleware(
 )
 
 app.include_router(graphql_router.router, prefix="/graphql")
+
+# Log registered routes for debugging
+logger = logging.getLogger("uvicorn")
+for r in app.routes:
+    logger.info(f"Registered route: {getattr(r, 'methods', None)} {r.path}")
 
 @app.get("/", tags=["Raíz"])
 def leer_raiz():
