@@ -17,7 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(graphql_router.router, prefix="/graphql")
+app.mount("/graphql", graphql_router.router)
 
 # Log registered routes for debugging
 logger = logging.getLogger("uvicorn")
