@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from app.routers import graphql_router
 import logging
+from fastapi import Request
+
+# Import schema from router for direct execution
+from app.routers.graphql_router import schema
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -23,6 +27,29 @@ app.mount("/graphql", graphql_router.router)
 logger = logging.getLogger("uvicorn")
 for r in app.routes:
     logger.info(f"Registered route: {getattr(r, 'methods', None)} {r.path}")
+
+
+@app.get("/graphql")
+async def graphql_get():
+    return {"status": "GraphQL endpoint (GET)"}
+
+
+@app.post("/graphql")
+async def graphql_post(request: Request):
+    try:
+        payload = await request.json()
+    except Exception:
+        return {"errors": ["Invalid JSON"]}
+    query = payload.get("query")
+    if not query:
+        return {"errors": ["No query provided"]}
+    result = schema.execute_sync(query)
+    response = {}
+    if result.errors:
+        response["errors"] = [str(e) for e in result.errors]
+    if result.data is not None:
+        response["data"] = result.data
+    return response
 
 @app.get("/", tags=["Raíz"])
 def leer_raiz():
